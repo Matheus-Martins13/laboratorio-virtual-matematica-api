@@ -1,0 +1,12 @@
+services: 
+  postgres:
+    image: postgres:latest
+    container_name: lab-matematica-api
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    env_file:
+      - .env

@@ -1,35 +1,40 @@
 import {
   Body,
   Controller,
-  Delete,
+  // Delete,
   Get,
   Param,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UserDto, UserRouteParameters } from './user.dto';
+import { UserDto } from './user.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import multerConfig from './multer/multer-config';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @Post()
-  create(@Body() user: UserDto) {
-    this.usersService.create(user);
+  @UseInterceptors(FileInterceptor('photo', multerConfig))
+  create(@Body() user: UserDto, @UploadedFile() photo: Express.Multer.File) {
+    return this.usersService.create(user, photo);
   }
 
   @UseGuards(AuthGuard)
   @Get('/:username')
-  async findByUserName(@Param() params: UserRouteParameters): Promise<UserDto> {
-    return await this.usersService.findByUserName(params.username);
+  async findByUserName(@Param() params: { email: string }) {
+    return await this.usersService.findByEmail(params.email);
   }
 
-  @UseGuards(AuthGuard)
-  @Delete('/:id')
-  async remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
-  }
+  // @UseGuards(AuthGuard)
+  // @Delete('/:id')
+  // async remove(@Param('id') id: string) {
+  //   return this.usersService.remove(id);
+  // }
 }

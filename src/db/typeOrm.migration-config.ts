@@ -1,7 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
-// import { UserEntity } from './entities/user.entity';
 
 config();
 
@@ -19,4 +18,12 @@ const dataSourceOptions: DataSourceOptions = {
   synchronize: false,
 };
 
-export default new DataSource(dataSourceOptions);
+const AppDataSource = new DataSource(dataSourceOptions);
+
+AppDataSource.initialize()
+  .then(() => {})
+  .catch((err) => {
+    console.error('Error during Data Source initialization', err);
+  });
+
+export default AppDataSource;

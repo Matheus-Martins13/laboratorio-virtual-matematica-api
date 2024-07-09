@@ -12,17 +12,17 @@ export class AddressEntity {
   estado: string;
 
   @Column({ type: 'varchar' })
-  numero: string;
+  numero?: string;
 
   @Column({ type: 'varchar' })
   cidade: string;
 
   @Column({ type: 'varchar' })
-  birro: string;
+  bairro: string;
 
   @Column({ type: 'varchar' })
   logradouro: string;
 
   @Column({ type: 'varchar' })
-  complemento: string;
+  complemento?: string;
 }

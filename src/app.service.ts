@@ -3,6 +3,6 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class AppService {
   getHello(): string {
-    return 'Seja bem-vindo(a) à TaskAPI!';
+    return 'Seja bem-vindo(a) ao Laboratório Virtual de Matemática!';
   }
 }

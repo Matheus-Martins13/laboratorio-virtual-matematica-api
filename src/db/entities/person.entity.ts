@@ -20,13 +20,13 @@ export class PersonEntity {
   cpf: string;
 
   @Column({ type: 'date' })
-  birthday: string;
+  birthday: Date;
 
   @OneToOne(() => AddressEntity)
   @JoinColumn({ name: 'id_address' })
-  idAddress: AddressEntity;
+  address: AddressEntity;
 
   @OneToOne(() => ContactEntity)
   @JoinColumn({ name: 'id_contact' })
-  idContact: ContactEntity;
+  contact: ContactEntity;
 }

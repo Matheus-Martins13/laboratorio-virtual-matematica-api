@@ -10,6 +10,7 @@ import {
 import { ProfileEntity } from './profile.entity';
 import { ProfilePictureEntity } from './profile-picture.entity';
 import { ObjectEntity } from './object.entity';
+import { PersonEntity } from './person.entity';
 
 @Entity({ name: 'user' })
 export class UserEntity {
@@ -23,25 +24,29 @@ export class UserEntity {
   passwordHash: string;
 
   @Column({ type: 'varchar' })
-  status: string;
+  status?: string;
+
+  @OneToOne(() => PersonEntity)
+  @JoinColumn({ name: 'id_person' })
+  person: PersonEntity;
 
   @OneToOne(() => ProfileEntity)
   @JoinColumn({ name: 'id_profile' })
-  idProfile: ProfileEntity;
+  profile: ProfileEntity;
 
   @OneToOne(() => ProfilePictureEntity)
   @JoinColumn({ name: 'id_profile_picture' })
-  idProfilePicture: ProfilePictureEntity;
+  profilePicture: ProfilePictureEntity;
 
   @ManyToMany(() => ObjectEntity, (obj) => obj.favoriteUsers)
   @JoinTable()
-  favoriteObjects: ObjectEntity[];
+  favoriteObjects?: ObjectEntity[];
 
   @ManyToMany(() => ObjectEntity, (obj) => obj.objectUsers)
   @JoinTable()
-  userObjects: ObjectEntity[];
+  userObjects?: ObjectEntity[];
 
   @ManyToMany(() => ObjectEntity, (obj) => obj.commentUsers)
   @JoinTable()
-  commentObjects: ObjectEntity[];
+  commentObjects?: ObjectEntity[];
 }

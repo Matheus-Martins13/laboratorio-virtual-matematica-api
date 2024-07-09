@@ -2,17 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
   app.useGlobalPipes(new ValidationPipe());
+
   const config = new DocumentBuilder()
-    .setTitle('Task Api - TypeORM')
-    .setDescription(
-      `O projeto Task API - TypeORM é um projeto de composição de portifólio. 
-      Se trata de uma API básica desenvolvida em Nestjs com recursos de segurança e
-      autenticação. O projeto utiliza o TypeORM.`,
-    )
+    .setTitle('Laboratório Virtual de Matemática')
+    .setDescription(``)
     .setVersion('1.0')
     .addTag('users')
     .addTag('task')
@@ -20,6 +20,8 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  app.useStaticAssets(join(__dirname, '..', 'public'));
   await app.listen(3000);
 }
 bootstrap();

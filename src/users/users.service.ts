@@ -29,6 +29,7 @@ import { PersonDto } from 'src/person/person.dto';
 // imports services
 import { PersonService } from 'src/person/person.service';
 import { removeImage } from 'src/utils/remove-image.util';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
@@ -40,6 +41,7 @@ export class UsersService {
     @InjectRepository(ProfilePictureEntity)
     private readonly profilePictureRepository: Repository<ProfilePictureEntity>,
     private readonly personService: PersonService,
+    private prisma: PrismaService,
   ) {}
 
   async create(newUser: UserDto, photo?: Express.Multer.File) {

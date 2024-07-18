@@ -22,9 +22,9 @@ export class AuthService {
   async signIn(email: string, password: string): Promise<AuthResponseDto> {
     const foundUser = await this.usersService.findByEmail(email);
 
-    // if (!foundUser || !bcryptCompareSync(password, foundUser.password)) {
-    //   throw new UnauthorizedException();
-    // }
+    if (!foundUser || !bcryptCompareSync(password, foundUser.passwordHash)) {
+      throw new UnauthorizedException();
+    }
 
     const payload = { sub: foundUser.idUser, email: foundUser.email };
 

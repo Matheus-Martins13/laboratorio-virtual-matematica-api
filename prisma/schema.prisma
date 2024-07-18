@@ -13,18 +13,188 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    Int     @default(autoincrement()) @id
-  email String  @unique
-  name  String?
-  posts Post[]
+model Person {
+  idPerson  String   @id @default(uuid()) @map("id_person")
+  name      String
+  cpf       String   @unique
+  birthday  DateTime
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  address   Address?
+  contact   Contact?
+  user      User?
+
+  @@map("person")
 }
 
-model Post {
-  id        Int      @default(autoincrement()) @id
-  title     String
-  content   String?
-  published Boolean? @default(false)
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?
+model Address {
+  idAddress   String   @id @default(uuid()) @map("id_address")
+  cep         String
+  estado      String
+  numero      String?
+  complemento String?
+  cidade      String
+  bairro      String
+  logradouro  String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  idPerson    String   @unique @map("id_person")
+  person      Person   @relation(fields: [idPerson], references: [idPerson], onDelete: Cascade)
+
+  @@map("address")
+}
+
+model Contact {
+  idContact String   @id @default(uuid()) @map("id_contact")
+  phone     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  idPerson  String   @unique @map("id_person")
+  person    Person   @relation(fields: [idPerson], references: [idPerson], onDelete: Cascade)
+
+  @@map("contact")
+}
+
+model User {
+  idUser         String          @id @default(uuid()) @map("id_user")
+  email          String          @unique
+  passwordHash   String          @map("passowrd_hash")
+  status         String          @default("ATIVO")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  idPerson       String          @unique @map("id_person")
+  person         Person          @relation(fields: [idPerson], references: [idPerson], onDelete: Cascade)
+  profile        Profile?
+  profilePicture ProfilePicture?
+  object         Object[]
+  comment        Comment[]
+  favorite       Favorite[]
+
+  @@map("user")
+}
+
+model Profile {
+  idProfile String   @id @default(uuid()) @map("id_profile")
+  type      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  idUser    String   @unique @map("id_user")
+  user      User     @relation(fields: [idUser], references: [idUser], onDelete: Cascade)
+
+  @@map("profile")
+}
+
+model ProfilePicture {
+  idProfilePicture String   @id @default(uuid()) @map("id_profile_picture")
+  name             String
+  path             String
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  idUser           String   @unique @map("id_user")
+  user             User     @relation(fields: [idUser], references: [idUser], onDelete: Cascade)
+
+  @@map("profile_picture")
+}
+
+model Object {
+  idObject      String         @id @default(uuid()) @map("id_object")
+  name          String
+  description   String
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  idUser        String         @unique @map("id_user")
+  user          User           @relation(fields: [idUser], references: [idUser], onDelete: Cascade)
+  idCategory    String         @unique @map("id_category")
+  category      Category       @relation(fields: [idCategory], references: [idCategory], onDelete: Cascade)
+  idSubcategory String         @unique @map("id_subcategory")
+  subcategory   Subcategory    @relation(fields: [idSubcategory], references: [idSubcategory], onDelete: Cascade)
+  objectPicture ObjectPicture?
+  objectFile    ObjectFile?
+  tag           Tag[]
+  comment       Comment[]
+  favorite      Favorite[]
+
+  @@map("object")
+}
+
+model ObjectPicture {
+  idObjectPicture String   @id @default(uuid()) @map("id_object_picture")
+  name            String
+  path            String
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  idObject        String   @unique @map("id_object")
+  object          Object   @relation(fields: [idObject], references: [idObject], onDelete: Cascade)
+
+  @@map("object_picture")
+}
+
+model ObjectFile {
+  idObjectFile String   @id @default(uuid()) @map("id_object_file")
+  name         String
+  path         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  idObject     String   @unique @map("id_object")
+  object       Object   @relation(fields: [idObject], references: [idObject], onDelete: Cascade)
+
+  @@map("object_file")
+}
+
+model Comment {
+  idUser      String   @unique @map("id_user")
+  user        User     @relation(fields: [idUser], references: [idUser], onDelete: Cascade)
+  idObject    String   @unique @map("id_object")
+  object      Object   @relation(fields: [idObject], references: [idObject], onDelete: Cascade)
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@id([idUser, idObject])
+  @@map("comment")
+}
+
+model Favorite {
+  idUser    String   @unique @map("id_user")
+  user      User     @relation(fields: [idUser], references: [idUser], onDelete: Cascade)
+  idObject  String   @unique @map("id_object")
+  object    Object   @relation(fields: [idObject], references: [idObject], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@id([idUser, idObject])
+  @@map("favorite")
+}
+
+model Category {
+  idCategory  String        @id @default(uuid()) @map("id_category")
+  name        String
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  subcategory Subcategory[]
+  Object      Object[]
+
+  @@map("category")
+}
+
+model Subcategory {
+  idSubcategory String   @id @default(uuid()) @map("id_subcategory")
+  name          String
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  idCategory    String   @unique @map("id_category")
+  category      Category @relation(fields: [idCategory], references: [idCategory])
+  object        Object[]
+
+  @@map("subcategory")
+}
+
+model Tag {
+  idTag     String   @id @default(uuid()) @map("id_tag")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  object    Object[]
+
+  @@map("tag")
 }

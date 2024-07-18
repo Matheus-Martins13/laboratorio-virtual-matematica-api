@@ -1,181 +1,95 @@
 // imports nestjs
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 // imports libs terceiras
 import { hashSync as bcryptHashSync } from 'bcrypt';
 
-// imports db
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-
-import { UserEntity } from 'src/db/entities/user.entity';
-import { ProfileEntity } from 'src/db/entities/profile.entity';
-import { ProfilePictureEntity } from 'src/db/entities/profile-picture.entity';
-import typeOrmMigrationConfig from 'src/db/typeOrm.migration-config';
-
 // imports dto
-import {
-  ProfileExtracted,
-  ProfilePictureExtracted,
-  UserDto,
-  UserExtracted,
-} from './user.dto';
-import { PersonDto } from 'src/person/person.dto';
+import { UserDto } from './user.dto';
 
 // imports services
-import { PersonService } from 'src/person/person.service';
 import { removeImage } from 'src/utils/remove-image.util';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { validateData } from './utils/validate-data.util';
+import { validateProfileTypeAndPicture } from './utils/validate-profile-type-and-picture';
+import { findByEmail } from './utils/find-by-email.util';
+import { findByCpf } from './utils/find-by-cpf.utils';
+import { findByPhoneNumber } from './utils/find-by-phone-number.utl';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
-    @InjectRepository(ProfileEntity)
-    private readonly profileRepository: Repository<ProfileEntity>,
-    @InjectRepository(ProfilePictureEntity)
-    private readonly profilePictureRepository: Repository<ProfilePictureEntity>,
-    private readonly personService: PersonService,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async create(newUser: UserDto, photo?: Express.Multer.File) {
     // Config profile picture
-    const { profileType, profilePicture } = this.validateProfileTypeAndPicture(
+    const { profileType, profilePicture } = validateProfileTypeAndPicture(
       newUser,
       photo,
     );
     newUser.profileType = profileType;
     newUser.profilePicture = profilePicture;
+    newUser.birthday = new Date(newUser.birthday);
 
-    await this.validateData(newUser);
+    await validateData(newUser, this.prisma);
 
     // Config password
     const passwordHash = bcryptHashSync(newUser.password, 10);
     newUser.password = passwordHash;
 
-    // Config data
-    const [person, user, profile] = UserDto.destructingUserDto(newUser);
-
-    // Save
-    const userCompose = await this.transactionSaveUser(
-      person,
-      user,
-      profile,
-      newUser.profilePicture,
-    );
-
-    return userCompose;
-  }
-
-  private validateProfileTypeAndPicture(
-    newUser: UserDto,
-    photo: Express.Multer.File,
-  ) {
-    if (!newUser.profileType) newUser.profileType = 'ALUNO';
-
-    if (!photo) {
-      newUser.profilePicture = {
-        name: `default-picture-${newUser.name}`,
-        path: '/users/default-profile-picture.png',
-      };
-    } else {
-      newUser.profilePicture = {
-        name: photo.filename,
-        path: photo.path.replace('public/', ''),
-      };
+    try {
+      const userSaved = await this.prisma.user.create({
+        data: {
+          email: newUser.email,
+          passwordHash: newUser.password,
+          profile: {
+            create: {
+              type: newUser.profileType,
+            },
+          },
+          profilePicture: {
+            create: newUser.profilePicture,
+          },
+          person: {
+            create: {
+              name: newUser.name,
+              cpf: newUser.cpf,
+              birthday: newUser.birthday,
+              address: {
+                create: {
+                  estado: newUser.estado,
+                  cidade: newUser.cidade,
+                  bairro: newUser.bairro,
+                  cep: newUser.cep,
+                  logradouro: newUser.logradouro,
+                  numero: newUser.numero,
+                  complemento: newUser.complemento,
+                },
+              },
+              contact: {
+                create: {
+                  phone: newUser.phone,
+                },
+              },
+            },
+          },
+        },
+      });
+      return userSaved;
+    } catch (err) {
+      removeImage(profilePicture.path);
+      throw err;
     }
-
-    return {
-      profileType: newUser.profileType,
-      profilePicture: newUser.profilePicture,
-    };
   }
 
   async findByEmail(email: string) {
-    const userFound = await this.userRepository.findOne({
-      where: { email },
-    });
-
-    if (!userFound) return null;
-
-    return userFound;
+    return await findByEmail(email, this.prisma);
   }
 
-  private async validateData(newUser: UserDto): Promise<void> {
-    if (!newUser.email || !newUser.password) {
-      throw new BadRequestException(['Required data: email and password']);
-    }
-
-    const userAlreadyRegistered = await this.findByEmail(newUser.email);
-
-    if (userAlreadyRegistered) {
-      removeImage(newUser.profilePicture.path);
-      throw new ConflictException([
-        `User with email '${newUser.email}' already registered`,
-      ]);
-    }
+  async findByCpf(cpf: string) {
+    return await findByCpf(cpf, this.prisma);
   }
 
-  private async transactionSaveUser(
-    person: PersonDto,
-    user: UserExtracted,
-    profile: ProfileExtracted,
-    profilePicture: ProfilePictureExtracted,
-  ) {
-    const queryRunner = typeOrmMigrationConfig.createQueryRunner();
-    // await queryRunner.connect();
-
-    await queryRunner.startTransaction();
-    try {
-      const personSaved = await this.personService.create(person);
-
-      const profileSaved: ProfileEntity =
-        await this.profileRepository.save(profile);
-
-      const profilePictureSaved =
-        await this.profilePictureRepository.save(profilePicture);
-
-      const dbUser: UserEntity = {
-        email: user.email,
-        passwordHash: user.password,
-        person: personSaved,
-        profile: profileSaved,
-        profilePicture: profilePictureSaved,
-      };
-
-      const userSaved = await this.userRepository.save(dbUser);
-
-      const userCompose = UserDto.userStructuring(
-        person,
-        userSaved,
-        profile,
-        profilePicture,
-      );
-      await queryRunner.commitTransaction();
-      return userCompose;
-    } catch (error) {
-      removeImage(profilePicture.path);
-      await queryRunner.rollbackTransaction();
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+  async findByPhoneNumber(phone: string) {
+    return await findByPhoneNumber(phone, this.prisma);
   }
-
-  // async remove(id: string) {
-  //   const result = await this.userRepository.delete(id);
-
-  //   if (!result.affected) {
-  //     throw new HttpException(
-  //       `User with id '${id}' not found`,
-  //       HttpStatus.NOT_FOUND,
-  //     );
-  //   }
-  // }
 }

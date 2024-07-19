@@ -21,7 +21,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(newUser: UserDto, photo?: Express.Multer.File) {
-    // Config profile picture
+    // Config profile type and picture
     const { profileType, profilePicture } = validateProfileTypeAndPicture(
       newUser,
       photo,

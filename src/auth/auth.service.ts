@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compareSync as bcryptCompareSync } from 'bcrypt';
 import { UsersService } from 'src/users/users.service';
@@ -20,6 +24,9 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string): Promise<AuthResponseDto> {
+    if (!email || !password)
+      throw new BadRequestException(`Required: email and password`);
+
     const foundUser = await this.usersService.findByEmail(email);
 
     if (!foundUser || !bcryptCompareSync(password, foundUser.passwordHash)) {

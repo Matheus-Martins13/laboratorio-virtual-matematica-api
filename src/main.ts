@@ -22,6 +22,10 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   app.useStaticAssets(join(__dirname, '..', 'public'));
+
+  app.enableCors({
+    origin: true,
+  });
   await app.listen(3001);
 }
 bootstrap();

@@ -30,7 +30,7 @@ export class AuthService {
     const foundUser = await this.usersService.findByEmail(email);
 
     if (!foundUser || !bcryptCompareSync(password, foundUser.passwordHash)) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException([`E-mail ou senha incorretos`]);
     }
 
     const payload = { sub: foundUser.idUser, email: foundUser.email };

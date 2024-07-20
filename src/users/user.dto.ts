@@ -1,17 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDateString,
-  IsEmail,
-  IsEnum,
-  IsInstance,
-  IsOptional,
-  IsString,
-  IsStrongPassword,
-  IsUUID,
-  Length,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { BadRequestException } from '@nestjs/common';
+
+import { removeImage } from 'src/utils/remove-image.util';
 
 export enum UserStatusEnum {
   ATIVO = 'ATIVO',
@@ -39,82 +28,71 @@ export class ProfilePictureExtracted {
 }
 
 export class UserDto {
-  @IsUUID()
-  @IsOptional()
   idUser?: string;
-
-  @IsString()
-  @MinLength(1)
   name: string;
-
-  @IsString()
-  @Length(11, 11)
   cpf: string;
-
-  @IsDateString()
   birthday: Date;
-
-  @IsString()
-  @Length(8, 8)
   cep: string;
-
-  @IsString()
   estado: string;
-
-  @IsString()
-  @IsOptional()
-  numero: string;
-
-  @IsString()
-  @IsOptional()
-  complemento: string;
-
-  @IsString()
+  numero?: string;
+  complemento?: string;
   cidade: string;
-
-  @IsString()
   bairro: string;
-
-  @IsString()
   logradouro: string;
-
-  @IsString()
   phone: string;
-
-  @ApiProperty({
-    description: 'E-mail válido do usuário',
-    example: 'email@email.com',
-  })
-  @IsEmail()
-  @MinLength(3)
-  @MaxLength(256)
   email: string;
-
-  @ApiProperty({
-    description: 'O password é a senha do usuário. Espera uma senha forte',
-    example: 'Password@2024',
-  })
-  @IsString()
-  @MaxLength(256)
-  @IsStrongPassword()
   password: string;
-
-  @ApiProperty({
-    enum: UserStatusEnum,
-    description: 'O status é responsável por dizer a situação do usuário',
-    example: 'ATIVO',
-  })
-  @IsEnum(UserStatusEnum)
-  @IsOptional()
   status: string;
-
-  @IsOptional()
-  @IsInstance(ProfilePictureExtracted, {
-    message: `profilePicture must be like:  { name: 'profile-name', path: 'picture-path' }`,
-  })
   profilePicture: ProfilePictureExtracted;
-
-  @IsEnum(ProfileTypeEnum)
-  @IsOptional()
   profileType: string;
+
+  static validateDto(newUser: UserDto) {
+    const validateEmail = (email: string) => {
+      const re: RegExp = /\S+@\S+\.\S+/;
+      return re.test(email);
+    };
+
+    const requiredProps = [
+      'name',
+      'cpf',
+      'birthday',
+      'cep',
+      'estado',
+      'cidade',
+      'bairro',
+      'logradouro',
+      'phone',
+      'email',
+      'password',
+    ];
+
+    if (
+      !newUser.name ||
+      !newUser.cpf ||
+      !newUser.birthday ||
+      !newUser.cep ||
+      !newUser.estado ||
+      !newUser.cidade ||
+      !newUser.bairro ||
+      !newUser.logradouro ||
+      !newUser.phone ||
+      !newUser.email ||
+      !newUser.password
+    ) {
+      removeImage(newUser.profilePicture.path);
+      throw new BadRequestException([
+        'Required data: ' + requiredProps.join(', '),
+      ]);
+    }
+
+    if (!validateEmail(newUser.email)) {
+      removeImage(newUser.profilePicture.path);
+      throw new BadRequestException(['E-mail inválido']);
+    }
+
+    if (newUser.cep.length < 8) {
+      removeImage(newUser.profilePicture.path);
+      throw new BadRequestException(['O CEP deve conter 8 dígitos']);
+    }
+  }
 }

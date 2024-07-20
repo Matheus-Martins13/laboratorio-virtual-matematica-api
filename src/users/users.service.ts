@@ -26,6 +26,9 @@ export class UsersService {
       newUser,
       photo,
     );
+
+    UserDto.validateDto(newUser);
+
     newUser.profileType = profileType;
     newUser.profilePicture = profilePicture;
     newUser.birthday = new Date(newUser.birthday);

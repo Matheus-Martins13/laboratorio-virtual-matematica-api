@@ -33,7 +33,10 @@ export class AuthService {
       throw new UnauthorizedException([`E-mail ou senha incorretos`]);
     }
 
-    const payload = { sub: foundUser.idUser, email: foundUser.email };
+    const payload = {
+      sub: foundUser.idUser,
+      type: foundUser.profile.type,
+    };
 
     const token = this.jwtService.sign(payload);
 

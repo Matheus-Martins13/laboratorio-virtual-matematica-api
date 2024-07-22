@@ -168,7 +168,7 @@ model Favorite {
 
 model Category {
   idCategory  String        @id @default(uuid()) @map("id_category")
-  name        String
+  name        String        @unique
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
   subcategory Subcategory[]
@@ -179,10 +179,10 @@ model Category {
 
 model Subcategory {
   idSubcategory String   @id @default(uuid()) @map("id_subcategory")
-  name          String
+  name          String   @unique
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
-  idCategory    String   @unique @map("id_category")
+  idCategory    String   @map("id_category")
   category      Category @relation(fields: [idCategory], references: [idCategory])
   object        Object[]
 

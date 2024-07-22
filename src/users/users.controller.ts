@@ -27,11 +27,15 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('/:username')
+  @Get('find-by-email/:username')
   async findByUserName(@Param() params: { email: string }) {
     return await this.usersService.findByEmail(params.email);
   }
 
+  @Get('/find-all')
+  findAll() {
+    return this.usersService.findAll();
+  }
   // @UseGuards(AuthGuard)
   // @Delete('/:id')
   // async remove(@Param('id') id: string) {

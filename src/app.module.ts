@@ -9,6 +9,7 @@ import { ObjectService } from './object/object.service';
 import { ObjectModule } from './object/object.module';
 import { CategoryModule } from './category/category.module';
 import { SubcategoryModule } from './subcategory/subcategory.module';
+import { TagModule } from './tag/tag.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { SubcategoryModule } from './subcategory/subcategory.module';
     ObjectModule,
     CategoryModule,
     SubcategoryModule,
+    TagModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, ObjectService],

@@ -60,7 +60,15 @@ export class SubcategoryService {
     return subcategoryFound;
   }
 
-  async findAll() {
+  async findAll(idCategory?: string) {
+    if (idCategory) {
+      const subcategories = await this.prisma.subcategory.findMany({
+        where: {
+          idCategory: idCategory,
+        },
+      });
+      return subcategories;
+    }
     const categories = await this.prisma.subcategory.findMany();
     return categories;
   }

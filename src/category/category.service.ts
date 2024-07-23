@@ -58,6 +58,16 @@ export class CategoryService {
     return categories;
   }
 
+  async findAllWithObjects() {
+    const categoriesWithObjects = await this.prisma.category.findMany({
+      include: {
+        Object: true,
+      },
+    });
+
+    return categoriesWithObjects;
+  }
+
   async remove(idCategory: string) {
     if (!idCategory) {
       throw new BadRequestException(['O id da categoria é obrigatório']);
